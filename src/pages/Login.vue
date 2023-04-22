@@ -49,7 +49,7 @@
               <div>
                 <q-input
                   outlined
-                  v-model="login.usuario"
+                  v-model="login.identifier"
                   type="text"
                   label="Correo Electrónico"
                   :dense="dense"
@@ -68,7 +68,7 @@
                   :type="isPwd ? 'password' : 'text'"
                   outlined
                   label="Contraseña"
-                  v-model="login.contrasena"
+                  v-model="login.password"
                   :dense="dense"
 
                 >
@@ -116,7 +116,7 @@
     persistent
   >
     <q-card style="max-width: 600px; width: 432px">
-      <q-form autofocus @submit.prevent="submitForm">
+      <q-form autofocus @submit.prevent="createNewCustomer()">
         <q-card-section>
           <div style="display: flex; justify-content: space-between; font-size: 22px; font-weight: bold; align-items: center; margin-bottom: 10px;">
             <span>Registrarte</span> <q-icon name="close" class="cursor-pointer" style="font-weight: bold;" @click="cerrarmodalnewaccount()"></q-icon>
@@ -129,7 +129,7 @@
               <q-input
                 outlined
                 dense
-                v-model="usuario.nombre"
+                v-model="customer.data.first_name"
                 :label="'Nombre'"
                 type="text"
                 color="#f5f6f7"
@@ -141,7 +141,7 @@
               <q-input
                 outlined
                 dense
-                v-model="usuario.apellido"
+                v-model="customer.data.last_name"
                 :label="'Apellidos'"
                 type="text"
                 lazy-rules
@@ -154,7 +154,7 @@
               <q-input
                 outlined
                 dense
-                v-model="usuario.email"
+                v-model="customer.data.email"
                 :label="'Correo Electrónico'"
                 type="text"
                 lazy-rules
@@ -166,7 +166,7 @@
               <q-input
                 outlined
                 dense
-                v-model="usuario.password"
+                v-model="customer.data.password"
                 :label="'Contraseña'"
                 type="password"
                 lazy-rules
@@ -178,7 +178,7 @@
               <q-input
                 outlined
                 dense
-                v-model="usuario.passwordConfirm"
+                v-model="customer.data.passwordConfirm"
                 :label="'Confirmar Contraseña'"
                 type="password"
                 lazy-rules
@@ -192,7 +192,7 @@
                 outlined
                 options-cover
                 dense
-                v-model="usuario.idtype"
+                v-model="customer.data.identificationtype"
                 :options="listIdTypes"
                 map-options
                 options-dense
@@ -209,7 +209,7 @@
                 onkeydown="javascript: return ['Backspace','Delete','ArrowLeft','ArrowRight'].includes(event.code) ? true : !isNaN(Number(event.key)) && event.code!=='Space'"
                 outlined
                 dense
-                v-model="usuario.id"
+                v-model="customer.data.identification"
                 :label="'Identificación'"
                 type="string"
                 lazy-rules
@@ -224,7 +224,7 @@
               onkeydown="javascript: return ['Backspace','Delete','ArrowLeft','ArrowRight'].includes(event.code) ? true : !isNaN(Number(event.key)) && event.code!=='Space'"
                 outlined
                 dense
-                v-model="usuario.telefono"
+                v-model="customer.data.phone"
                 :label="'Teléfono'"
                 type="text"
                 lazy-rules
@@ -235,7 +235,7 @@
                 filled
                 :label="'Fecha De Nacimiento'"
                 dense
-                v-model="usuario.birthday"
+                v-model="customer.data.birthdate"
                 :readonly="ModalVer"
                 style="width: 49%;"
               >
@@ -247,8 +247,8 @@
                       transition-hide="scale"
                     >
                       <q-date
-                        v-model="usuario.birthday"
-                        mask="MMM D, YYYY"
+                        v-model="customer.data.birthdate"
+                        mask="YYYY-MM-DD"
                       >
                         <div class="row items-center justify-end">
                           <q-btn
@@ -271,7 +271,7 @@
                 filled
                 :label="'Fecha De Nacimiento'"
                 dense
-                v-model="usuario.birthday"
+                v-model="customer.birthday"
                 :readonly="ModalVer"
                 style="width: 49%;"
               >
@@ -283,7 +283,7 @@
                       transition-hide="scale"
                     >
                       <q-date
-                        v-model="usuario.birthday"
+                        v-model="customer.birthday"
                         mask="YYYY-MM-DD"
                       >
                         <div class="row items-center justify-end">
@@ -305,7 +305,7 @@
                 outlined
                 options-cover
                 dense
-                v-model="usuario.gender"
+                v-model="customer.gender"
                 :options="listGenders"
                 map-options
                 options-dense
@@ -354,6 +354,10 @@
 <script setup>
 import { ref, onMounted, reactive } from 'vue';
 import { useRouter, useRoute } from "vue-router";
+import { useQuasar, date } from "quasar";
+import { api } from "boot/axios";
+
+let $q = useQuasar();
 
 const router = useRouter();
 const modalnewaccount = ref(false);
@@ -361,18 +365,49 @@ const isPwd = ref(true);
 
 const condYSer = ref(false);
 const publicidad = ref(false);
+const myForm = ref(null);
 
-const usuario = ref({
-  nombre: "",
-  apellido: "",
-  telefono: "",
+const customer = ref({
+  data: {
+    identification: "1111",
+    first_name: "11111",
+    middle_name: "1111",
+    last_name: "1111",
+    second_last_name: "1111",
+    full_name: "11111",
+    address: "11111",
+    suburb: "11111",
+    birthdate: "2023-04-21",
+    photo: "1",
+    bank_account: "1",
+    bank_card: "1",
+    bank_key: "1",
+    email: "",
+    identificationtype: "1",
+    state: "1",
+    city: "1",
+    clienttype: "1",
+    customerprofile: "1",
+    gender: "1",
+    bank: "1",
+    comments: "1",
+    credithistory: "1",
+    employmenthistory: "1",
+    commercialreferences: "1",
+    businessadvisor: "1",
+    phone: "1",
+    password: "1"
+  }
+
+  /* first_name: "",
+  last_name: "",
+  phone: "",
   password: "",
   passwordConfirm: "",
   email: "",
-  idType: "",
+  idtype: "",
   id: "",
-  birthday:"",
-  gender: "",
+  birthday:"" */
 })
 
 const listIdTypes = ref([
@@ -412,14 +447,84 @@ gender: "Prefiero no decirlo"}
 const cerrarmodalnewaccount = () => {
   modalnewaccount.value = false;
   condYSer.value = false;
-  usuario.value = {};
+  customer.value = {};
+}
+
+
+const createNewCustomer = () => {
+
+/* customer.value.data.identification = parseInt(customer.value.data.identification); */
+customer.value.data.phone = parseInt(customer.value.data.phone);
+console.log(customer.value)
+  api
+    .post("/customers", customer.value)
+    .then((response) => {
+      console.log(response)
+
+      modalnewaccount.value = false;
+      condYSer.value = false;
+      customer.value = {};
+
+      /* mostrarMensajes(response.data);
+       loadData();
+      mostrarModal.value = false; */
+    })
+    /* .catch((error) => {
+      console.log(error);
+    }) */;
+
 }
 
 let login = reactive({
-  email: "",
-  passwordHash: "",
+  identifier: "",
+  password: "",
 });
 
+const infoIniSesion = ref([]);
+
+function Login() {
+  myForm.value.validate().then((success) => {
+    $q.loading.show();
+    if (success) {
+
+      api
+        .post("auth/local", login)
+        .then((response) => {
+          /* store.inicio(response.data); */
+
+          infoIniSesion.username = response.data.username;
+          infoIniSesion.email = response.data.email;
+
+          api.defaults.headers.common.Authorization =
+            "Bearer " + response.data.jwt;
+            console.log(api.defaults.headers.common.Authorization)
+            $q.sessionStorage.set("finansofttoken", response.data.jwt);
+            $q.loading.hide();
+            router.push("/");
+
+        })
+        .catch((error) => {
+          $q.loading.hide();
+
+        });
+    } else {
+      $q.notify({
+        type: "negative",
+        message: /* $t */ "Key",
+        timeout: 3000,
+      });
+      $q.loading.show();
+    }
+  });
+}
+
+onMounted(() => {
+/*   for(var i = 0; i = 1; i++){
+    location.reload();
+  } */
+
+
+})
 
 </script>
 

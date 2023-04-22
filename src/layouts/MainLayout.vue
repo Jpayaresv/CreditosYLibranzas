@@ -47,7 +47,7 @@
                   <q-item-section>Cambiar Contraseña</q-item-section>
                 </q-item>
 
-                <q-item id="CerrarSesion" clickable @click="null">
+                <q-item id="CerrarSesion" clickable @click="logout()">
                   <q-item-section avatar>
                     <q-icon name="logout" size="1.5em" />
                   </q-item-section>
@@ -154,6 +154,8 @@
 import { defineComponent, ref, onMounted } from 'vue'
 import { useRouter, useRoute } from "vue-router";
 import EssentialLink from 'components/EssentialLink.vue'
+import { SessionStorage } from 'quasar';
+import { showNotify } from 'src/utils/global.js';
 
 const router = useRouter();
 
@@ -164,6 +166,12 @@ const Menu = ref([]);
 
 const Redirect = (path) =>{
   router.push("/" + path);
+}
+
+const logout = () => {
+  SessionStorage.clear();
+  router.push("/login");
+  showNotify("Sesión Cerrada Correctamente",)
 }
 
 onMounted(() =>{
