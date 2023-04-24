@@ -11,38 +11,12 @@
       z-index: -1;
     "
   >
-<!--     <div class="mycardlogo col-sm-12" style="margin-top: 3%">
-      <div class="row justify-between">
-        <img
-          scale-down
-          alt="Quasar logo"
-          :src="ImagenSistema.Proyecto"
-          class="col-4"
-          style="max-width: 10%"
-        />
-
-        <img
-          scale-down
-          alt="Quasar logo"
-          :src="ImagenSistema.Sistema"
-          class="col-4"
-          style="max-width: 15%"
-        />
-      </div>
-    </div> -->
-
     <div style="position: absolute; width: 400px;  margin: 0; right: 0; top: 50%; transform: translateY(-50%) translateX(-35%);">
       <div  >
       <q-card style="background: white; box-shadow: 0 2px 4px rgba(0, 0, 0, .1), 0 8px 16px rgba(0, 0, 0, .1); padding: 10px 0 10px 0; border-radius: 10px;">
         <q-card-section>
           <q-form ref="myForm" class="q-gutter-md" @submit.prevent="Login()">
             <div>
-              <h4
-                class="text-h4 q-my-none text-weight-regular"
-                style="text-align: center"
-              >
-                {{ nombre }}
-              </h4>
               <div style="text-align: center; font-size: 21px;">Inicio de Sesión</div>
             </div>
 
@@ -52,7 +26,7 @@
                   v-model="login.identifier"
                   type="text"
                   label="Correo Electrónico"
-                  :dense="dense"
+                  dense
                   style="width: 100%"
                   :rules="[(val) => !!val || '* Campo Requerido']"
                   lazy-rules
@@ -69,7 +43,7 @@
                   outlined
                   label="Contraseña"
                   v-model="login.password"
-                  :dense="dense"
+                  dense
 
                 >
                   <template v-slot:append>
@@ -178,7 +152,7 @@
               <q-input
                 outlined
                 dense
-                v-model="customer.data.passwordConfirm"
+                v-model="passwordConfirm"
                 :label="'Confirmar Contraseña'"
                 type="password"
                 lazy-rules
@@ -236,7 +210,6 @@
                 :label="'Fecha De Nacimiento'"
                 dense
                 v-model="customer.data.birthdate"
-                :readonly="ModalVer"
                 style="width: 49%;"
               >
                 <template v-slot:prepend>
@@ -356,8 +329,11 @@ import { ref, onMounted, reactive } from 'vue';
 import { useRouter, useRoute } from "vue-router";
 import { useQuasar, date } from "quasar";
 import { api } from "boot/axios";
+import Constants from "src/boot/globalConstants.js";
+import { showNotify } from 'src/utils/global.js';
 
 let $q = useQuasar();
+const URL = Constants.SERVER_URL;
 
 const router = useRouter();
 const modalnewaccount = ref(false);
@@ -367,48 +343,29 @@ const condYSer = ref(false);
 const publicidad = ref(false);
 const myForm = ref(null);
 
+const passwordConfirm = ref("");
+
+const user = ref(
+  {
+  username: "",
+  email: "",
+  password: ""
+})
+
 const customer = ref({
   data: {
-    identification: "1111",
-    first_name: "11111",
-    middle_name: "1111",
-    last_name: "1111",
-    second_last_name: "1111",
-    full_name: "11111",
-    address: "11111",
-    suburb: "11111",
-    birthdate: "2023-04-21",
-    photo: "1",
-    bank_account: "1",
-    bank_card: "1",
-    bank_key: "1",
+    identification: "",
+    first_name: "",
+    last_name: "",
+    address: "",
+    birthdate: "",
     email: "",
-    identificationtype: "1",
-    state: "1",
-    city: "1",
-    clienttype: "1",
-    customerprofile: "1",
-    gender: "1",
-    bank: "1",
-    comments: "1",
-    credithistory: "1",
-    employmenthistory: "1",
-    commercialreferences: "1",
-    businessadvisor: "1",
-    phone: "1",
-    password: "1"
+    identificationtype: "",
+    phone: "",
+    password: ""
   }
-
-  /* first_name: "",
-  last_name: "",
-  phone: "",
-  password: "",
-  passwordConfirm: "",
-  email: "",
-  idtype: "",
-  id: "",
-  birthday:"" */
-})
+}
+);
 
 const listIdTypes = ref([
 {id: 1,
@@ -447,31 +404,50 @@ gender: "Prefiero no decirlo"}
 const cerrarmodalnewaccount = () => {
   modalnewaccount.value = false;
   condYSer.value = false;
-  customer.value = {};
+  customer.value = {
+  data: {
+    identification: "",
+    first_name: "",
+    last_name: "",
+    address: "",
+    birthdate: "",
+    email: "",
+    identificationtype: "",
+    phone: "",
+    password: ""
+  }
+};
 }
 
-
 const createNewCustomer = () => {
-
-/* customer.value.data.identification = parseInt(customer.value.data.identification); */
-customer.value.data.phone = parseInt(customer.value.data.phone);
-console.log(customer.value)
+ customer.value.data.identificationtype = customer.value.data.identificationtype.toString();
   api
-    .post("/customers", customer.value)
+    .post("/v1/customers", customer.value)
     .then((response) => {
-      console.log(response)
+      console.log("Status: "+ response.status)
+      if(response.status == 200){
+        modalnewaccount.value = false;
+        condYSer.value = false;
+        customer.value = {};
+        showNotify("Usuario Registrado Correctamente", "success")
+      }else if (response.status == 400){
+        showNotify("No fue posible crear el usuario, intente nuevamente.", "warning")
+      }
 
-      modalnewaccount.value = false;
+
+      /* modalnewaccount.value = false;
       condYSer.value = false;
-      customer.value = {};
+      customer.value = {}; */
 
-      /* mostrarMensajes(response.data);
-       loadData();
-      mostrarModal.value = false; */
     })
-    /* .catch((error) => {
-      console.log(error);
-    }) */;
+    .catch((error) => {
+      console.log(error.response.data.error.message)
+      if(error.response.data.error.message.includes("valid email")){
+        showNotify(error.response.data.error.message, "error")
+      }else{
+        showNotify(error.response.data.error.message, "error")
+      }
+    });
 
 }
 

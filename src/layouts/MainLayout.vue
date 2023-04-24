@@ -68,7 +68,7 @@
     v-model="leftDrawerOpen"
       show-if-above
       :width="250"
-      :breakpoint="400"
+      :breakpoint="815"
       style="box-shadow: 5px 2px 2px #dfdfdf"
     >
       <q-list>
